@@ -33,7 +33,7 @@ public enum Binding implements KeyBind{
     schematic_select(KeyCode.f),
     schematic_flip_x(KeyCode.z),
     schematic_flip_y(KeyCode.x),
-    schematic_menu(KeyCode.t),
+    schematic_menu(KeyCode.h),
 
     category_prev(KeyCode.comma, "blocks"),
     category_next(KeyCode.period),
@@ -72,6 +72,16 @@ public enum Binding implements KeyBind{
     chat_scroll(new Axis(KeyCode.scroll)),
     chat_mode(KeyCode.tab),
     console(KeyCode.f8),
+
+    alternate_toggle(KeyCode.shiftLeft),
+    toggle_lighting(KeyCode.l),
+    shoot_ranges(KeyCode.backtick),
+    overdrive_ranges(KeyCode.o),
+
+    freecam(KeyCode.r),
+    minerAI(KeyCode.t),
+    rebuild_helper_AI(KeyCode.y),
+    auto_target(KeyCode.u),
     ;
 
     private final KeybindValue defaultValue;

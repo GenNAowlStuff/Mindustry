@@ -45,7 +45,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
     final static float playerSelectRange = mobile ? 17f : 11f;
     final static IntSeq removed = new IntSeq();
     /** Maximum line length. */
-    final static int maxLength = 100;
+    final static int maxLength = 1024;
     final static Rect r1 = new Rect(), r2 = new Rect();
 
     public final OverlayFragment frag = new OverlayFragment();
@@ -999,7 +999,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
         //consume tap event if necessary
         if(build.interactable(player.team()) && build.block.consumesTap){
             consumed = true;
-        }else if(build.interactable(player.team()) && build.block.synthetic() && (!consumed || build.block.allowConfigInventory)){
+        }else if(build.block.synthetic() && (!consumed || build.block.allowConfigInventory)){
             if(build.block.hasItems && build.items.total() > 0){
                 frag.inv.showFor(build);
                 consumed = true;

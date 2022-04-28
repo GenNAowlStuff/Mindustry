@@ -512,7 +512,7 @@ public class JoinDialog extends BaseDialog{
     }
 
     void safeConnect(String ip, int port, int version){
-        if(version != Version.build && Version.build != -1 && version != -1){
+        if(Version.enabled && version != Version.build && Version.build != -1 && version != -1){
             ui.showInfo("[scarlet]" + (version > Version.build ? KickReason.clientOutdated : KickReason.serverOutdated) + "\n[]" +
                 Core.bundle.format("server.versions", Version.build, version));
         }else{
@@ -534,7 +534,7 @@ public class JoinDialog extends BaseDialog{
             Core.settings.remove("server-list");
         }
 
-        var url = becontrol.active() ? serverJsonBeURL : serverJsonURL;
+        var url = (becontrol.active() || Version.type.equals("custom")) ? serverJsonBeURL : serverJsonURL;
         Log.info("Fetching community servers at @", url);
 
         //get servers

@@ -139,6 +139,17 @@ public class Drawf{
         Draw.color();
     }
 
+    public static void teamRange(float x, float y, float rad, Team team, Color color){
+        float a = team == player.team() ? 0.3f : 1f;
+        Lines.stroke(3f, Tmp.c1.set(Pal.gray).a(a));
+        Lines.dashCircle(x, y, rad);
+        Lines.stroke(1f, Tmp.c1.set(color).a(a));
+        Lines.dashCircle(x, y, rad);
+        Lines.stroke(3f, Tmp.c1.set(team.color).a(a * Mathf.absin(10, 0.5f)));
+        Lines.dashCircle(x, y, rad);
+        Draw.reset();
+    }
+
     public static void dashCircle(float x, float y, float rad, Color color){
         Lines.stroke(3f, Pal.gray);
         Lines.dashCircle(x, y, rad);

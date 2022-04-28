@@ -153,10 +153,14 @@ abstract class UnitComp implements Healthc, Physicsc, Hitboxc, Statusc, Teamc, I
         if(isBuilding()){
             return state.rules.infiniteResources ? Float.MAX_VALUE : Math.max(type.clipSize, type.region.width) + buildingRange + tilesize*4f;
         }
+        float clipsize = type.clipSize;
         if(mining()){
-            return type.clipSize + type.miningRange;
+            clipsize += type.miningRange;
         }
-        return type.clipSize;
+        if(unitRanges){
+            clipsize += range() * 2;
+        }
+        return clipsize;
     }
 
     @Override

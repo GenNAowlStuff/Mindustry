@@ -48,7 +48,7 @@ public class Renderer implements ApplicationListener{
     public boolean animateShields, drawWeather = true, drawStatus;
     public float weatherAlpha;
     /** minZoom = zooming out, maxZoom = zooming in */
-    public float minZoom = 1.5f, maxZoom = 6f;
+    public float minZoom = 0.4f, maxZoom = 24f;
     public Seq<EnvRenderer> envRenderers = new Seq<>();
     public ObjectMap<String, Runnable> customBackgrounds = new ObjectMap<>();
     public TextureRegion[] bubbles = new TextureRegion[16], splashes = new TextureRegion[12];
@@ -283,7 +283,7 @@ public class Renderer implements ApplicationListener{
             }
         }
 
-        if(state.rules.lighting){
+        if(state.rules.lighting && mapLighting){
             Draw.draw(Layer.light, lights::draw);
         }
 

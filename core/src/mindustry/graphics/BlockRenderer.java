@@ -14,6 +14,10 @@ import mindustry.game.EventType.*;
 import mindustry.game.Teams.*;
 import mindustry.gen.*;
 import mindustry.world.*;
+import mindustry.world.blocks.defense.*;
+import mindustry.world.blocks.defense.OverdriveProjector.*;
+import mindustry.world.blocks.defense.turrets.*;
+import mindustry.world.blocks.defense.turrets.BaseTurret.*;
 import mindustry.world.blocks.power.*;
 
 import static arc.Core.*;
@@ -304,6 +308,18 @@ public class BlockRenderer{
             }
         });
 
+        if(overdriveRanges || turretRanges){
+            blockTree.intersect(new Rect(bounds).grow((turretRanges ? 500 : 200) * 2), tile -> {
+                if(overdriveRanges && tile.build != null && tile.build instanceof OverdriveBuild && procLinks.add(tile.build.id)){
+                    tileview.add(tile);
+                }
+
+                if(turretRanges && tile.build != null && tile.build instanceof BaseTurretBuild && procLinks.add(tile.build.id)){
+                    tileview.add(tile);
+                }
+            });
+        }
+
         lastCamX = avgx;
         lastCamY = avgy;
         lastRangeX = rangex;
@@ -359,7 +375,7 @@ public class BlockRenderer{
                         Draw.z(Layer.block);
                     }
 
-                    if(entity.team == player.team() && renderer.drawStatus && block.consumes.any()){
+                    if(renderer.drawStatus && block.consumes.any()){
                         entity.drawStatus();
                     }
                 }

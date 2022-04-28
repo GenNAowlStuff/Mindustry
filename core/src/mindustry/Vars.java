@@ -52,7 +52,7 @@ public class Vars implements Loadable{
     /** Maximum extra padding around deployment schematics. */
     public static final int maxLoadoutSchematicPad = 5;
     /** Maximum schematic size.*/
-    public static final int maxSchematicSize = 32;
+    public static final int maxSchematicSize = 1024;
     /** All schematic base64 starts with this string.*/
     public static final String schematicBaseStart ="bXNjaA";
     /** IO buffer size. */
@@ -166,7 +166,7 @@ public class Vars implements Loadable{
     /** whether steam is enabled for this game */
     public static boolean steam;
     /** whether typing into the console is enabled - developers only */
-    public static boolean enableConsole = false;
+    public static boolean enableConsole = true;
     /** whether to clear sector saves when landing */
     public static boolean clearSectors = false;
     /** whether any light rendering is enabled */
@@ -206,6 +206,19 @@ public class Vars implements Loadable{
     public static final String schematicExtension = "msch";
     /** path to the java executable */
     public static String javaPath;
+
+    /** client variables */
+    public static float pressTime = 20;
+    public static boolean showToggles = false;
+    public static boolean mapLighting = true;
+    public static boolean overdriveRanges = false;
+    public static boolean turretRanges = false;
+    public static boolean unitRanges = false;
+    public static boolean freeCam = false;
+    public static boolean minerAI = false;
+    public static boolean rebuildAI = false;
+    public static boolean helperAI = false;
+    public static boolean autoTarget = false;
 
     /** list of all locales that can be switched to */
     public static Locale[] locales;

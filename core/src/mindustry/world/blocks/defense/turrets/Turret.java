@@ -249,6 +249,14 @@ public class Turret extends ReloadTurret{
             if(heatRegion != Core.atlas.find("error")){
                 heatDrawer.get(this);
             }
+
+            if(turretRanges && enabled() && hasAmmo()){
+                Draw.z(Layer.max);
+                if(!targetAir) Drawf.teamRange(x, y, range, team, Pal.lightishGray);
+                else if(!targetGround) Drawf.teamRange(x, y, range, team, Color.sky);
+                else Drawf.teamRange(x, y, range, team, Pal.accent);
+                Draw.z(Layer.turret);
+            }
         }
 
         @Override

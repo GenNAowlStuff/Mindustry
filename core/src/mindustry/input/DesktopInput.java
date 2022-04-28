@@ -10,16 +10,24 @@ import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.ui.*;
 import arc.scene.ui.layout.*;
+import arc.struct.*;
 import arc.util.*;
 import mindustry.*;
+import mindustry.content.*;
 import mindustry.core.*;
+import mindustry.entities.*;
 import mindustry.entities.units.*;
 import mindustry.game.EventType.*;
 import mindustry.game.*;
+import mindustry.game.Teams.*;
 import mindustry.gen.*;
 import mindustry.graphics.*;
+import mindustry.type.*;
 import mindustry.ui.*;
+import mindustry.ui.dialogs.*;
 import mindustry.world.*;
+import mindustry.world.blocks.ConstructBlock.*;
+import mindustry.world.blocks.storage.CoreBlock.*;
 
 import static arc.Core.*;
 import static mindustry.Vars.net;
@@ -48,6 +56,8 @@ public class DesktopInput extends InputHandler{
     public long selectMillis = 0;
     /** Previously selected tile. */
     public Tile prevSelected;
+    /** Last autotargetted unit. */
+    public Posc target;
 
     boolean showHint(){
         return ui.hudfrag.shown && Core.settings.getBool("hints") && selectRequests.isEmpty() &&
@@ -112,6 +122,21 @@ public class DesktopInput extends InputHandler{
 
         if(Core.input.keyDown(Binding.schematic_select) && !Core.scene.hasKeyboard() && mode != breaking){
             drawSelection(schemX, schemY, cursorX, cursorY, Vars.maxSchematicSize);
+        }
+
+        StatusDialog dialog = ui.hudfrag.statusDialog;
+        if(dialog.selectUnits && dialog.selectStart != null){
+            float x = dialog.selectStart.x, y = dialog.selectStart.y;
+            float mx = Core.input.mouseWorldX(), my = Core.input.mouseWorldY();
+            drawSelection((int)(x / tilesize + 0.5f), (int)(y  / tilesize + 0.5f), cursorX, cursorY, maxLength);
+            Draw.reset();
+            Draw.mixcol(Pal.accent, 1f);
+            Draw.alpha(0.5f);
+            Groups.unit.intersect(Math.min(x, mx), Math.min(y, my) , Math.abs(mx - x), Math.abs(my - y), u -> {
+                if(u.team != player.team()) return;
+                Draw.rect(u.type.fullIcon, u.x, u.y, u.rotation - 90);
+            });
+            Draw.reset();
         }
 
         Draw.reset();
@@ -201,7 +226,7 @@ public class DesktopInput extends InputHandler{
             panning = true;
         }
 
-        if((Math.abs(Core.input.axis(Binding.move_x)) > 0 || Math.abs(Core.input.axis(Binding.move_y)) > 0 || input.keyDown(Binding.mouse_move)) && (!scene.hasField())){
+        if((Math.abs(Core.input.axis(Binding.move_x)) > 0 || Math.abs(Core.input.axis(Binding.move_y)) > 0 || input.keyDown(Binding.mouse_move)) && (!scene.hasField()) && !freeCam){
             panning = false;
         }
 
@@ -212,7 +237,7 @@ public class DesktopInput extends InputHandler{
                 }
 
                 Core.camera.position.add(Tmp.v1.setZero().add(Core.input.axis(Binding.move_x), Core.input.axis(Binding.move_y)).nor().scl(camSpeed));
-            }else if(!player.dead() && !panning){
+            }else if(!player.dead() && !panning && !freeCam){
                 Core.camera.position.lerpDelta(player, Core.settings.getBool("smoothcamera") ? 0.08f : 1f);
             }
 
@@ -221,6 +246,9 @@ public class DesktopInput extends InputHandler{
                 Core.camera.position.y += Mathf.clamp((Core.input.mouseY() - Core.graphics.getHeight() / 2f) * panScale, -1, 1) * camSpeed;
             }
 
+            if(freeCam){
+                Core.camera.position.add(Tmp.v1.set(Core.input.axis(Binding.move_x), Core.input.axis(Binding.move_y)).nor().scl(camSpeed * 2));
+            }
         }
 
         shouldShoot = !scene.hasMouse() && !locked;
@@ -458,6 +486,36 @@ public class DesktopInput extends InputHandler{
             }
         }
 
+        if(Core.input.keyTap(Binding.toggle_lighting)){
+            mapLighting = !mapLighting;
+        }
+
+        if(Core.input.keyTap(Binding.overdrive_ranges)){
+            overdriveRanges = !overdriveRanges;
+        }
+
+        if(Core.input.keyTap(Binding.shoot_ranges)){
+            if(Core.input.keyDown(Binding.alternate_toggle)) unitRanges = !unitRanges;
+            else turretRanges = !turretRanges;
+        }
+
+        if(Core.input.keyTap(Binding.freecam)){
+            freeCam = !freeCam;
+        }
+
+        if(Core.input.keyTap(Binding.minerAI)){
+            minerAI = !minerAI;
+        }
+
+        if(Core.input.keyTap(Binding.rebuild_helper_AI)){
+            if(Core.input.keyDown(Binding.boost)) helperAI = !helperAI;
+            else rebuildAI = !rebuildAI;
+        }
+
+        if(Core.input.keyTap(Binding.auto_target)){
+            autoTarget = !autoTarget;
+        }
+
         if(sreq != null){
             float offset = ((sreq.block.size + 2) % 2) * tilesize / 2f;
             float x = Core.input.mouseWorld().x + offset;
@@ -633,23 +691,93 @@ public class DesktopInput extends InputHandler{
         float ya = Core.input.axis(Binding.move_y);
         boolean boosted = (unit instanceof Mechc && unit.isFlying());
 
-        movement.set(xa, ya).nor().scl(speed);
-        if(Core.input.keyDown(Binding.mouse_move)){
-            movement.add(input.mouseWorld().sub(player).scl(1f / 25f * speed)).limit(speed);
+        Queue<BlockPlan> blocks = unit.team.data().blocks;
+        if(unit.canBuild()){
+            if(rebuildAI && !blocks.isEmpty() && unit.buildPlan() == null){
+                BlockPlan block = blocks.first();
+                Tile tile = world.tile(block.x, block.y);
+                if(tile != null && tile.block().id == block.block) blocks.removeFirst();
+                else if(Build.validPlace(content.block(block.block), unit.team(), block.x, block.y, block.rotation)){
+                    blocks.addLast(blocks.removeFirst());
+                    unit.addBuild(new BuildPlan(block.x, block.y, block.rotation, content.block(block.block), block.config));
+                }else blocks.addLast(blocks.removeFirst());
+            }
+
+            if(helperAI && unit.buildPlan() == null){
+                Units.nearby(unit.team, unit.x, unit.y, 2000, u -> {
+                    if(unit.buildPlan() != null) return;
+                    if(u.canBuild() && u != unit && u.activelyBuilding()){
+                        Building build = world.build(u.buildPlan().x, u.buildPlan().y);
+                        if(build instanceof ConstructBuild cons){
+                            float dist = cons.dst(unit) - buildingRange;
+                            if(dist / unit.speed() < cons.buildCost * 0.9f) unit.plans.addFirst(u.buildPlan());
+                        }
+                    }
+                });
+            }
         }
+
+        movement.set(0, 0);
+        if(unit.canMine() && minerAI){
+            Item wanted = unit.team.items().get(Items.copper) < unit.team.items().get(Items.lead) ? Items.copper : Items.lead;
+            Tile ore = indexer.findClosestOre(unit, wanted);
+            if((unit.stack.item != wanted && unit.stack.amount > 0) || unit.stack.amount >= unit.itemCapacity()){
+                CoreBuild core = unit.closestCore();
+                movement.set(core.x, core.y).sub(unit);
+                if(movement.len() < 100){
+                    if(core.acceptStack(unit.stack.item, unit.stack.amount, unit) > 0){
+                        Call.transferInventory(player, core);
+                    }
+                }
+            }else{
+                movement.set(ore.x * tilesize, ore.y * tilesize).sub(unit);
+                if(movement.len() < unit.type.miningRange){
+                    movement.set(0, 0);
+                    unit.mineTile(ore);
+                }
+            }
+        }
+
+        if(freeCam){
+            if(unit.canBuild() && unit.buildPlan() != null && isBuilding){
+                movement.set(unit.buildPlan().x * tilesize, unit.buildPlan().y * tilesize).sub(unit);
+                if(movement.len() < buildingRange - 50) movement.set(0, 0);
+            }
+        }else if(!Mathf.zero(xa) || !Mathf.zero(ya)) movement.set(xa, ya);
+
+        if(Core.input.keyDown(Binding.mouse_move)){
+            movement.set(input.mouseWorld()).sub(unit);
+            if(movement.len() < 1) movement.set(0, 0);
+        }
+
+        movement.nor().scl(speed);
 
         float mouseAngle = Angles.mouseAngle(unit.x, unit.y);
         boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted && unit.type.rotateShooting;
 
-        if(aimCursor){
-            unit.lookAt(mouseAngle);
-        }else{
-            unit.lookAt(unit.prefRotation());
-        }
+        if(autoTarget){
+            Posc original = target;
+            boolean targetAir = unit.type.targetAir, targetGround = unit.type.targetGround;
+            float realRange = 0;
+            for(Weapon w : unit.type.weapons) realRange = Math.max(w.bullet.range() + w.bullet.splashDamageRadius, realRange);
+            if(targetAir && !unit.type.targetGround) target = Units.bestEnemy(unit.team, unit.x, unit.y, realRange, e -> !e.dead() && !e.isGrounded(), UnitSorts.closest);
+            else{
+                target = Units.bestTarget(unit.team, unit.x, unit.y, realRange, e -> !e.dead() && (e.isGrounded() || targetAir) && (!e.isGrounded() || targetGround), b -> targetGround, UnitSorts.closest);
+                if(target == null && unit.type.canHeal) target = Units.findAllyTile(unit.team, unit.x, unit.y, realRange, b -> b.damaged());
+            }
+            if(target == null && original != null) player.shooting = false;
+        }else target = null;
+
+        if(aimCursor && target == null) unit.lookAt(mouseAngle);
+        else if(target != null && unit.type.faceTarget) unit.lookAt(target);
+        else unit.lookAt(unit.prefRotation());
 
         unit.movePref(movement);
 
-        unit.aim(unit.type.faceTarget ? Core.input.mouseWorld() : Tmp.v1.trns(unit.rotation, Core.input.mouseWorld().dst(unit)).add(unit.x, unit.y));
+        if(autoTarget && target != null && !minerAI){
+            player.shooting = !unit.activelyBuilding();
+            unit.aim(unit.type.faceTarget ? target : Tmp.v1.trns(unit.rotation, target.dst(unit)).add(unit.x, unit.y));
+        }else unit.aim(unit.type.faceTarget ? Core.input.mouseWorld() : Tmp.v1.trns(unit.rotation, Core.input.mouseWorld().dst(unit)).add(unit.x, unit.y));
         unit.controlWeapons(true, player.shooting && !boosted);
 
         player.boosting = Core.input.keyDown(Binding.boost);

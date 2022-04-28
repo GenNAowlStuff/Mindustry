@@ -151,6 +151,12 @@ public class OverdriveProjector extends Block{
             Lines.endLine(true);
 
             Draw.reset();
+
+            if(overdriveRanges){
+                Draw.z(Layer.max);
+                Drawf.dashCircle(x, y, range + phaseHeat * phaseRangeBoost, baseColor);
+                Draw.z(Layer.block);
+            }
         }
 
         @Override

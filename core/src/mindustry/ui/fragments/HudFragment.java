@@ -6,6 +6,7 @@ import arc.graphics.*;
 import arc.graphics.g2d.*;
 import arc.math.*;
 import arc.scene.*;
+import arc.scene.Element;
 import arc.scene.actions.*;
 import arc.scene.event.*;
 import arc.scene.style.*;
@@ -27,6 +28,7 @@ import mindustry.input.*;
 import mindustry.net.Packets.*;
 import mindustry.type.*;
 import mindustry.ui.*;
+import mindustry.ui.dialogs.*;
 
 import static mindustry.Vars.*;
 
@@ -34,6 +36,10 @@ public class HudFragment extends Fragment{
     private static final float dsize = 65f, pauseHeight = 36f;
 
     public final PlacementFragment blockfrag = new PlacementFragment();
+    public final ToggleFragment togglefrag = new ToggleFragment();
+    public final UtilitiesFragment utilFrag = new UtilitiesFragment();
+    public final SpawnDialog spawnDialog = new SpawnDialog();
+    public final StatusDialog statusDialog = new StatusDialog();
     public boolean shown = true;
 
     private ImageButton flip;
@@ -108,6 +114,14 @@ public class HudFragment extends Fragment{
             .visible(() -> Core.settings.getBool("position"))
             .touchable(Touchable.disabled)
             .name("position");
+            t.top().right();
+            t.row();
+            //mouse
+            t.label(() -> (int)(Core.input.mouseWorld().x / tilesize + 0.5f) + "," + (int)(Core.input.mouseWorld().y / tilesize + 0.5f))
+            .visible(() -> Core.settings.getBool("position"))
+            .touchable(Touchable.disabled)
+            .name("position")
+            .color(Color.lightGray);
             t.top().right();
         });
 
@@ -201,12 +215,12 @@ public class HudFragment extends Fragment{
 
                 //table with button to skip wave
                 s.button(Icon.play, Styles.righti, 30f, () -> {
-                    if(net.client() && player.admin){
+                    if(net.client()){
                         Call.adminRequest(player, AdminAction.wave);
                     }else{
                         logic.skipWave();
                     }
-                }).growY().fillX().right().width(40f).disabled(b -> !canSkipWave()).name("skip");
+                }).growY().fillX().right().width(40f).name("skip");
             }).width(dsize * 5 + 4f).name("statustable");
 
             wavesMain.row();
@@ -236,6 +250,21 @@ public class HudFragment extends Fragment{
                 }).left();
             }).width(dsize * 5 + 4f);
             editorMain.visible(() -> shown && state.isEditor());
+
+            cont.table(Styles.black5, table -> {
+                table.background(Tex.buttonEdge4);
+                table.button(Icon.menu, Styles.emptyi, () -> {
+                    showToggles = !showToggles;
+                }).top().left().size(32).padRight(16);
+
+                spawnDialog.hudButton = table.button(new TextureRegionDrawable(spawnDialog.spawn.fullIcon, 0.8f), Styles.emptyi, () -> {
+                    spawnDialog.show();
+                }).top().left().size(32).padRight(16).get();
+
+                statusDialog.hudButton = table.button(new TextureRegionDrawable(statusDialog.status.uiIcon, 2), Styles.emptyi, () -> {
+                    statusDialog.show();
+                }).top().left().size(32).padRight(4).get();
+            }).top().left().marginLeft(5).marginTop(8).visible(() -> shown);
 
             //fps display
             cont.table(info -> {
@@ -389,6 +418,8 @@ public class HudFragment extends Fragment{
             });
 
         blockfrag.build(parent);
+        togglefrag.build(parent);
+        utilFrag.build(parent);
     }
 
     @Remote(targets = Loc.both, forward = true, called = Loc.both)
@@ -770,7 +801,7 @@ public class HudFragment extends Fragment{
             }
 
             return builder;
-        }).growX().pad(8f);
+        }).growX().padLeft(8f).padRight(8f);
 
         table.row();
 
@@ -819,7 +850,7 @@ public class HudFragment extends Fragment{
     }
 
     private boolean canSkipWave(){
-        return state.rules.waves && ((net.server() || player.admin) || !net.active()) && state.enemies == 0 && !spawner.isSpawning();
+        return state.rules.waves && ((net.server() || player.admin) || !net.active()) && net.client();
     }
 
 }
