@@ -774,8 +774,8 @@ public class DesktopInput extends InputHandler{
 
         unit.movePref(movement);
 
-        if(autoTarget && target != null && !minerAI){
-            player.shooting = !unit.activelyBuilding();
+        if(autoTarget && target != null){
+            player.shooting = !unit.activelyBuilding() && !unit.mining();
             unit.aim(unit.type.faceTarget ? target : Tmp.v1.trns(unit.rotation, target.dst(unit)).add(unit.x, unit.y));
         }else unit.aim(unit.type.faceTarget ? Core.input.mouseWorld() : Tmp.v1.trns(unit.rotation, Core.input.mouseWorld().dst(unit)).add(unit.x, unit.y));
         unit.controlWeapons(true, player.shooting && !boosted);

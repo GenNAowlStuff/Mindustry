@@ -54,7 +54,7 @@ public class MenuFragment extends Fragment{
         if(mobile){
             parent.fill(c -> c.bottom().left().button("", Styles.infot, ui.about::show).size(84, 45).name("info"));
             parent.fill(c -> c.bottom().right().button("", Styles.discordt, ui.discord::show).size(84, 45).name("discord"));
-        }else if(becontrol.active()){
+        }else if(becontrol.active() && false){
             parent.fill(c -> c.bottom().right().button("@be.check", Icon.refresh, () -> {
                 ui.loadfrag.show();
                 becontrol.checkUpdate(result -> {

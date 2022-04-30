@@ -36,11 +36,11 @@ public class StatusDialog extends BaseDialog{
         Label label = cont.label(() -> status.localizedName).get();
         cont.row();
 
+        Seq<StatusEffect> all = content.statusEffects().select(s -> !s.isHidden());
         cont.pane(list -> {
-            for(int i = 0;i < content.statusEffects().size;i++){
-                StatusEffect effect = content.statusEffects().get(i);
-                if(effect.isHidden()) continue;
-                if(i % 10 == 0) list.row();
+            for(int i = 0;i < all.size;i++){
+                StatusEffect effect = all.get(i);
+                if(i != 0 && i % 10 == 0) list.row();
                 list.button(new TextureRegionDrawable(effect.uiIcon), () -> {
                     status = effect;
                     hudButton.getStyle().imageUp = new TextureRegionDrawable(effect.uiIcon);
@@ -76,7 +76,7 @@ public class StatusDialog extends BaseDialog{
             if(selectStart == null) selectStart = new Vec2(Core.input.mouseWorldX(), Core.input.mouseWorldY());
             else{
                 float x = selectStart.x, y = selectStart.y, mx = Core.input.mouseWorldX(), my = Core.input.mouseWorldY();
-                Groups.unit.intersect(Math.min(x, mx), Math.min(y, my) , Math.abs(mx - x), Math.abs(my - y), u -> {
+                Groups.unit.intersect(Math.min(x, mx), Math.min(y, my), Math.abs(mx - x), Math.abs(my - y), u -> {
                     if(u.team == player.team()) selected.add(u);
                 });
                 selectUnits = false;
