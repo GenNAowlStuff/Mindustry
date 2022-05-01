@@ -22,7 +22,7 @@ import static mindustry.Vars.*;
 
 public class OverlayRenderer{
     private static final float indicatorLength = 14f;
-    private static final float spawnerMargin = tilesize*11f;
+    private static final float spawnerMargin = tilesize*20f;
     private static final Rect rect = new Rect();
 
     private float buildFade, unitFade;
@@ -190,8 +190,9 @@ public class OverlayRenderer{
 
         if(state.hasSpawns()){
             for(Tile tile : spawner.getSpawns()){
-                if(tile.within(player.x, player.y, state.rules.dropZoneRadius + spawnerMargin)){
-                    Draw.alpha(Mathf.clamp(1f - (player.dst(tile) - state.rules.dropZoneRadius) / spawnerMargin));
+                float dst = Math.min(player.dst(tile), Core.input.mouseWorld().dst(tile));
+                if(dst < state.rules.dropZoneRadius + spawnerMargin){
+                    Draw.alpha(Mathf.clamp(1f - (dst - state.rules.dropZoneRadius) / spawnerMargin));
                     Lines.dashCircle(tile.worldx(), tile.worldy(), state.rules.dropZoneRadius);
                 }
             }

@@ -445,7 +445,9 @@ public class DesktopInput extends InputHandler{
         }
 
         if(Core.input.keyTap(Binding.clear_building)){
-            player.unit().clearBuilding();
+            if(Core.input.keyDown(Binding.alternate_toggle)){
+                if(player.unit().plans.size > 1) player.unit().plans.addLast(player.unit().plans.removeFirst());
+            }else player.unit().clearBuilding();
         }
 
         if(Core.input.keyTap(Binding.schematic_select) && !Core.scene.hasKeyboard() && mode != breaking){
