@@ -6,7 +6,6 @@ import arc.files.*;
 import arc.graphics.*;
 import arc.struct.*;
 import arc.util.*;
-import arc.util.async.*;
 import mindustry.*;
 import mindustry.core.GameState.*;
 import mindustry.game.EventType.*;
@@ -25,7 +24,6 @@ public class Saves{
     Seq<SaveSlot> saves = new Seq<>();
     @Nullable SaveSlot current;
     private @Nullable SaveSlot lastSectorSave;
-    AsyncExecutor previewExecutor = new AsyncExecutor(1);
     private boolean saving;
     private float time;
 
@@ -223,7 +221,7 @@ public class Saves{
             if(Core.assets.isLoaded(loadPreviewFile().path())){
                 Core.assets.unload(loadPreviewFile().path());
             }
-            previewExecutor.submit(() -> {
+            mainExecutor.submit(() -> {
                 try{
                     previewFile().writePng(renderer.minimap.getPixmap());
                     requestedPreview = false;

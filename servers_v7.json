@@ -1,7 +1,7 @@
 [
   {
-    "name": "mindustry.pl",
-    "address": ["0.baseduser.eu.org:6000", "0.baseduser.eu.org:6666", "0.baseduser.eu.org:6966"]
+    "name": "distributorium",
+    "address": ["130.61.226.9", "0.baseduser.eu.org:6966", "0.baseduser.eu.org:6666", "0.baseduser.eu.org:6000"]
   },
   {
     "name": "C.A.M.S.",
@@ -9,7 +9,7 @@
   },
   {
     "name": "SMokeOfAnarchy",
-    "address": "SMokeOfAnarchy.ru"
+    "address": "strider.SMokeOfAnarchy.ru"
   },
   {
     "name": "hexpvp.ml",
@@ -17,7 +17,7 @@
   },
   {
     "name": "Omega",
-    "address": ["omegam.mindustry.me:25577", "omegam.mindustry.me", "omegam.mindustry.me:25586", "omegam.mindustry.me:25565"]
+    "address": ["node2.crewcraft.cc:25569", "node2.crewcraft.cc:25571", "node2.crewcraft.cc:25572"]
   },
   {
     "name": "MeowLand",
