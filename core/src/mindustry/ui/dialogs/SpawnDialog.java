@@ -7,6 +7,7 @@ import arc.math.geom.*;
 import arc.scene.*;
 import arc.scene.style.*;
 import arc.scene.ui.*;
+import arc.struct.*;
 import arc.util.*;
 import mindustry.content.*;
 import mindustry.game.*;
@@ -64,8 +65,15 @@ public class SpawnDialog extends BaseDialog{
         cont.row();
 
         cont.pane(list -> {
-            for(int i = 0;i < content.units().size;i++){
-                UnitType unit = content.units().get(i);
+            UnitType[] player = new UnitType[] {UnitTypes.alpha, UnitTypes.beta, UnitTypes.gamma, UnitTypes.evoke, UnitTypes.incite, UnitTypes.emanate};
+            Seq<UnitType> all = content.units().select(s -> !s.isHidden());
+            for(UnitType u : player){
+                all.remove(u);
+                all.add(u);
+            }
+
+            for(int i = 0;i < all.size;i++){
+                UnitType unit = all.get(i);
                 if(unit.isHidden()) continue;
                 if(i % 5 == 0) list.row();
                 list.button(new TextureRegionDrawable(unit.fullIcon), () -> {
@@ -74,7 +82,7 @@ public class SpawnDialog extends BaseDialog{
                     label.setText(spawn.localizedName);
                 }).size(128);
             }
-        }).width(700).top().center().get();
+        }).width(675).top().center().get();
         cont.row();
 
         cont.table(table -> {

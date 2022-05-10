@@ -123,20 +123,6 @@ public class DesktopInput extends InputHandler{
             drawSelection(schemX, schemY, cursorX, cursorY, Vars.maxSchematicSize);
         }
 
-        StatusDialog dialog = ui.hudfrag.statusDialog;
-        if(dialog.selectUnits && dialog.selectStart != null){
-            float x = dialog.selectStart.x, y = dialog.selectStart.y;
-            float mx = Core.input.mouseWorldX(), my = Core.input.mouseWorldY();
-            drawSelection((int)(x / tilesize + 0.5f), (int)(y  / tilesize + 0.5f), cursorX, cursorY, maxLength);
-            Draw.reset();
-            Draw.mixcol(Pal.accent, 1f);
-            Draw.alpha(0.5f);
-            Groups.unit.intersect(Math.min(x, mx), Math.min(y, my) , Math.abs(mx - x), Math.abs(my - y), u -> {
-                if(u.team != player.team()) return;
-                Draw.rect(u.type.fullIcon, u.x, u.y, u.rotation - 90);
-            });
-            Draw.reset();
-        }
         drawCommanded();
 
         Draw.reset();
@@ -782,7 +768,7 @@ public class DesktopInput extends InputHandler{
         float ya = Core.input.axis(Binding.move_y);
         boolean boosted = (unit instanceof Mechc && unit.isFlying());
 
-        Queue<BlockPlan> blocks = unit.team.data().blocks;
+        Queue<BlockPlan> blocks = unit.team.data().plans;
         if(unit.canBuild()){
             if(rebuildAI && !blocks.isEmpty() && unit.buildPlan() == null){
                 BlockPlan block = blocks.first();
@@ -822,7 +808,7 @@ public class DesktopInput extends InputHandler{
                 }
             }else{
                 movement.set(ore.x * tilesize, ore.y * tilesize).sub(unit);
-                if(movement.len() < unit.type.miningRange){
+                if(movement.len() < unit.type.mineRange){
                     movement.set(0, 0);
                     unit.mineTile(ore);
                 }
@@ -850,7 +836,7 @@ public class DesktopInput extends InputHandler{
             Posc original = target;
             boolean targetAir = unit.type.targetAir, targetGround = unit.type.targetGround;
             float realRange = 0;
-            for(Weapon w : unit.type.weapons) realRange = Math.max(w.bullet.range() + w.bullet.splashDamageRadius, realRange);
+            for(Weapon w : unit.type.weapons) realRange = Math.max(w.bullet.maxRange + w.bullet.splashDamageRadius, realRange);
             if(targetAir && !unit.type.targetGround) target = Units.bestEnemy(unit.team, unit.x, unit.y, realRange, e -> !e.dead() && !e.isGrounded(), UnitSorts.closest);
             else{
                 target = Units.bestTarget(unit.team, unit.x, unit.y, realRange, e -> !e.dead() && (e.isGrounded() || targetAir) && (!e.isGrounded() || targetGround), b -> targetGround, UnitSorts.closest);

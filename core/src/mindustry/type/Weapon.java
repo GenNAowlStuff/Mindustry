@@ -236,6 +236,13 @@ public class Weapon implements Cloneable{
 
         Draw.xscl = 1f;
 
+        if(unitRanges){
+            Draw.z(Layer.max);
+            if(!bullet.collidesAir) Drawf.teamRange(wx, wy, range(), unit.team, Pal.lightishGray);
+            else if(!bullet.collidesGround) Drawf.teamRange(wx, wy, range(), unit.team, Color.sky);
+            else Drawf.teamRange(wx, wy, range(), unit.team, Pal.accent);
+        }
+
         Draw.z(z);
     }
 

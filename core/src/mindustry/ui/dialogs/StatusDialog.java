@@ -20,9 +20,6 @@ public class StatusDialog extends BaseDialog{
     public ImageButton hudButton;
     public StatusEffect status = StatusEffects.burning;
     public float statusTime = 10;
-    public Seq<Unit> selected = new Seq<>();
-    public boolean selectUnits = false;
-    public Vec2 selectStart;
 
     public StatusDialog(){
         super("");
@@ -31,7 +28,7 @@ public class StatusDialog extends BaseDialog{
 
         buttons.button(Icon.add, () -> {
             apply();
-        }).width(100).get().addListener(new Tooltip(t -> t.background(Tex.button).add("Apply Effect")));
+        }).width(100).get().addListener(new Tooltip(t -> t.background(Tex.button).add("Apply Effect (To Commanded Units)")));
 
         Label label = cont.label(() -> status.localizedName).get();
         cont.row();
@@ -62,34 +59,6 @@ public class StatusDialog extends BaseDialog{
             table.image(new TextureRegionDrawable(Icon.refresh)).get().addListener(new Tooltip(t -> t.background(Tex.button).add("Status Time")));
         }).center().bottom();
         cont.row();
-
-        ImageButton selectButton = cont.button(new TextureRegionDrawable(Icon.units), () -> {
-            hide();
-            selectUnits = true;
-            selected.clear();
-        }).width(150).get();
-        selectButton.addListener(new Tooltip(t -> t.background(Tex.button).add("Select Units")));
-        cont.row();
-
-        Events.run(Trigger.update, () -> {
-            if(!Core.input.justTouched() || Core.scene.hasMouse() || !selectUnits) return;
-            if(selectStart == null) selectStart = new Vec2(Core.input.mouseWorldX(), Core.input.mouseWorldY());
-            else{
-                float x = selectStart.x, y = selectStart.y, mx = Core.input.mouseWorldX(), my = Core.input.mouseWorldY();
-                Groups.unit.intersect(Math.min(x, mx), Math.min(y, my), Math.abs(mx - x), Math.abs(my - y), u -> {
-                    if(u.team == player.team()) selected.add(u);
-                });
-                selectUnits = false;
-                selectStart = null;
-                show();
-            }
-        });
-
-        Events.on(WorldLoadEvent.class, event -> {
-            selected.clear();
-            selectUnits = false;
-            selectStart = null;
-        });
     }
 
     public void apply(){
@@ -97,10 +66,8 @@ public class StatusDialog extends BaseDialog{
             StringBuilder builder = new StringBuilder();
             Call.sendChatMessage(builder.toString());
         }else{
-            Seq<Unit> valid = new Seq<>();
-            for(Unit u : selected) if(u.isValid()) valid.add(u);
-            for(Unit u : valid) u.apply(status, statusTime * 60);
-            selected = valid;
+            for(Unit u : control.input.selectedUnits) if(u.isValid()) u.apply(status, statusTime * 60);
+            player.unit().apply(status, statusTime * 60);
             hide();
         }
     }

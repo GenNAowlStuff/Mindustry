@@ -9,13 +9,12 @@ import mindustry.ui.*;
 
 import static mindustry.Vars.*;
 
-public class ToggleFragment extends Fragment{
-    @Override
+public class ToggleFragment{
     public void build(Group parent){
         parent.fill(table -> {
             table.table(Tex.button, togglables -> {
                 togglables.pane(list -> {
-                    ImageButton lighting = new ImageButton(new TextureRegionDrawable(Blocks.illuminator.fullIcon), Styles.emptytogglei);
+                    ImageButton lighting = new ImageButton(new TextureRegionDrawable(Blocks.illuminator.fullIcon), Styles.emptyTogglei);
                     lighting.clicked(() -> {
                         mapLighting = !mapLighting;
                     });
@@ -23,7 +22,7 @@ public class ToggleFragment extends Fragment{
                     lighting.update(() -> lighting.setChecked(!mapLighting));
                     list.add(lighting).size(32).pad(10);
 
-                    ImageButton overdrive = new ImageButton(new TextureRegionDrawable(Blocks.overdriveProjector.fullIcon), Styles.emptytogglei);
+                    ImageButton overdrive = new ImageButton(new TextureRegionDrawable(Blocks.overdriveProjector.fullIcon), Styles.emptyTogglei);
                     overdrive.clicked(() -> {
                         overdriveRanges = !overdriveRanges;
                     });
@@ -31,7 +30,7 @@ public class ToggleFragment extends Fragment{
                     overdrive.update(() -> overdrive.setChecked(overdriveRanges));
                     list.add(overdrive).size(32).pad(10);
 
-                    ImageButton turret = new ImageButton(new TextureRegionDrawable(Blocks.duo.fullIcon), Styles.emptytogglei);
+                    ImageButton turret = new ImageButton(new TextureRegionDrawable(Blocks.duo.fullIcon), Styles.emptyTogglei);
                     turret.clicked(() -> {
                         turretRanges = !turretRanges;
                     });
@@ -39,7 +38,7 @@ public class ToggleFragment extends Fragment{
                     turret.update(() -> turret.setChecked(turretRanges));
                     list.add(turret).size(32).pad(10);
 
-                    ImageButton unit = new ImageButton(new TextureRegionDrawable(UnitTypes.dagger.fullIcon), Styles.emptytogglei);
+                    ImageButton unit = new ImageButton(new TextureRegionDrawable(UnitTypes.dagger.fullIcon), Styles.emptyTogglei);
                     unit.clicked(() -> {
                         unitRanges = !unitRanges;
                     });
@@ -53,7 +52,7 @@ public class ToggleFragment extends Fragment{
 
                     list.row();
 
-                    ImageButton freecam = new ImageButton(new TextureRegionDrawable(UnitTypes.gamma.fullIcon), Styles.emptytogglei);
+                    ImageButton freecam = new ImageButton(new TextureRegionDrawable(UnitTypes.gamma.fullIcon), Styles.emptyTogglei);
                     freecam.clicked(() -> {
                         freeCam = !freeCam;
                     });
@@ -61,7 +60,7 @@ public class ToggleFragment extends Fragment{
                     freecam.update(() -> freecam.setChecked(freeCam));
                     list.add(freecam).size(32).pad(10);
 
-                    ImageButton miner = new ImageButton(new TextureRegionDrawable(UnitTypes.mono.fullIcon), Styles.emptytogglei);
+                    ImageButton miner = new ImageButton(new TextureRegionDrawable(UnitTypes.mono.fullIcon), Styles.emptyTogglei);
                     miner.clicked(() -> {
                         minerAI = !minerAI;
                     });
@@ -69,7 +68,7 @@ public class ToggleFragment extends Fragment{
                     miner.update(() -> miner.setChecked(minerAI));
                     list.add(miner).size(32).pad(10);
 
-                    ImageButton rebuild = new ImageButton(new TextureRegionDrawable(UnitTypes.poly.fullIcon), Styles.emptytogglei);
+                    ImageButton rebuild = new ImageButton(new TextureRegionDrawable(UnitTypes.poly.fullIcon), Styles.emptyTogglei);
                     rebuild.clicked(() -> {
                         rebuildAI = !rebuildAI;
                     });
@@ -77,7 +76,7 @@ public class ToggleFragment extends Fragment{
                     rebuild.update(() -> rebuild.setChecked(rebuildAI));
                     list.add(rebuild).size(32).pad(10);
 
-                    ImageButton helper = new ImageButton(new TextureRegionDrawable(UnitTypes.oct.fullIcon), Styles.emptytogglei);
+                    ImageButton helper = new ImageButton(new TextureRegionDrawable(UnitTypes.oct.fullIcon), Styles.emptyTogglei);
                     helper.clicked(() -> {
                         helperAI = !helperAI;
                     });
@@ -85,7 +84,7 @@ public class ToggleFragment extends Fragment{
                     helper.update(() -> helper.setChecked(helperAI));
                     list.add(helper).size(32).pad(10);
 
-                    ImageButton target = new ImageButton(new TextureRegionDrawable(UnitTypes.beta.fullIcon), Styles.emptytogglei);
+                    ImageButton target = new ImageButton(new TextureRegionDrawable(UnitTypes.beta.fullIcon), Styles.emptyTogglei);
                     target.clicked(() -> {
                         autoTarget = !autoTarget;
                     });
