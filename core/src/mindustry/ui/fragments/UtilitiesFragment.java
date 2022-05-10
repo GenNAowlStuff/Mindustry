@@ -49,7 +49,7 @@ public class UtilitiesFragment extends Fragment{
                 top.table(Styles.black5, table -> {
                     table.background(Tex.buttonEdge3).margin(5);
 
-                    Image unitIcon = table.image((player.unit() == null ? UnitTypes.dagger : player.unit().type).fullIcon).size(48).padRight(-4).get().setScaling(Scaling.fit);
+                    Image unitIcon = table.image(player.icon()).size(48).padRight(-4).get().setScaling(Scaling.fit);
 
                     Button kill = table.button(Icon.cancel, Styles.emptyi, () -> killUnit()).size(48).padRight(-8).get();
                     kill.update(() -> {
@@ -57,6 +57,7 @@ public class UtilitiesFragment extends Fragment{
                             killPresst += Time.delta;
                             if(killPresst > pressTime) killUnit();
                         }else killPresst = 0;
+                        kill.setDisabled(player.unit() instanceof BlockUnitc);
                     });
                     kill.addListener(new Tooltip(t -> t.background(Tex.button).add("Kill Unit")));
 
@@ -66,11 +67,12 @@ public class UtilitiesFragment extends Fragment{
                             dupePresst += Time.delta;
                             if(dupePresst > pressTime) dupeUnit();
                         }else dupePresst = 0;
+                        dupe.setDisabled(player.unit() instanceof BlockUnitc);
                     });
                     dupe.addListener(new Tooltip(t -> t.background(Tex.button).add("Duplicate Unit")));
 
                     Events.on(UnitChangeEvent.class, l -> {
-                        unitIcon.setDrawable((player.unit() == null ? UnitTypes.dagger : player.unit().type).fullIcon);
+                        unitIcon.setDrawable(player.icon());
                     });
 
                     TextureRegionDrawable teamRect = new TextureRegionDrawable(Core.atlas.find("blank")){
