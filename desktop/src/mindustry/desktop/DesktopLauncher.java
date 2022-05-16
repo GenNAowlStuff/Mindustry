@@ -41,7 +41,7 @@ public class DesktopLauncher extends ClientLauncher{
                 maximized = true;
                 width = 900;
                 height = 700;
-                //enable gl3 with command-line argument
+                //enable gl3 with command-line argument (slower performance, apparently)
                 if(Structs.contains(arg, "-gl3")){
                     gl30 = true;
                 }

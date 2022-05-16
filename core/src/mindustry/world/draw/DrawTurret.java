@@ -18,6 +18,7 @@ public class DrawTurret extends DrawBlock{
     protected static final Rand rand = new Rand();
 
     public Seq<DrawPart> parts = new Seq<>();
+    /** Prefix to use when loading base region. */
     public String basePrefix = "";
     /** Overrides the liquid to draw in the liquid region. */
     public @Nullable Liquid liquidDraw;
@@ -35,11 +36,9 @@ public class DrawTurret extends DrawBlock{
         for(var part : parts){
             part.getOutlines(out);
         }
-        if(preview.found()){
-            out.add(preview);
-            if(block.region.found()){
-                out.add(block.region);
-            }
+
+        if(block.region.found()){
+            out.add(block.region);
         }
     }
 
@@ -116,14 +115,13 @@ public class DrawTurret extends DrawBlock{
         }
 
         //TODO test this for mods, e.g. exotic
-        if(!base.found() && block.minfo.mod != null) base = Core.atlas.find(block.minfo.mod.name + "-block-" + block.size);
+        if(!base.found() && block.minfo.mod != null) base = Core.atlas.find(block.minfo.mod.name + "-" + basePrefix + "block-" + block.size);
         if(!base.found()) base = Core.atlas.find(basePrefix + "block-" + block.size);
     }
 
     /** @return the generated icons to be used for this block. */
     @Override
     public TextureRegion[] icons(Block block){
-        TextureRegion showTop = preview.found() ? preview : block.region;
-        return top.found() ? new TextureRegion[]{base, showTop, top} : new TextureRegion[]{base, showTop};
+        return top.found() ? new TextureRegion[]{base, preview, top} : new TextureRegion[]{base, preview};
     }
 }

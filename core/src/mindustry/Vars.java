@@ -95,8 +95,6 @@ public class Vars implements Loadable{
     public static final float buildingRange = 220f;
     /** range for moving items */
     public static final float itemTransferRange = 220f;
-    /** multiplier for core item capacity when launching */
-    public static final float launchCapacityMultiplier = 0.25f;
     /** range for moving items for logic units */
     public static final float logicItemTransferRange = 45f;
     /** duration of time between turns in ticks */
@@ -245,7 +243,7 @@ public class Vars implements Loadable{
     public static BeControl becontrol;
     public static AsyncCore asyncCore;
     public static BaseRegistry bases;
-    public static GlobalConstants constants;
+    public static GlobalVars logicVars;
     public static MapEditor editor;
     public static GameService service = new GameService();
 
@@ -290,7 +288,7 @@ public class Vars implements Loadable{
             }
 
             Arrays.sort(locales, Structs.comparing(LanguageDialog::getDisplayName, String.CASE_INSENSITIVE_ORDER));
-            locales = Seq.with(locales).and(new Locale("router")).toArray(Locale.class);
+            locales = Seq.with(locales).add(new Locale("router")).toArray(Locale.class);
         }
 
         Version.init();
@@ -326,7 +324,7 @@ public class Vars implements Loadable{
         controlPath = new ControlPathfinder();
         fogControl = new FogControl();
         bases = new BaseRegistry();
-        constants = new GlobalConstants();
+        logicVars = new GlobalVars();
         javaPath =
             new Fi(OS.prop("java.home")).child("bin/java").exists() ? new Fi(OS.prop("java.home")).child("bin/java").absolutePath() :
             Core.files.local("jre/bin/java").exists() ? Core.files.local("jre/bin/java").absolutePath() :
@@ -377,22 +375,24 @@ public class Vars implements Loadable{
 
         Seq<String> logBuffer = new Seq<>();
         Log.logger = (level, text) -> {
-            String result = text;
-            String rawText = Log.format(stags[level.ordinal()] + "&fr " + text);
-            System.out.println(rawText);
+            synchronized(logBuffer){
+                String result = text;
+                String rawText = Log.format(stags[level.ordinal()] + "&fr " + text);
+                System.out.println(rawText);
 
-            result = tags[level.ordinal()] + " " + result;
+                result = tags[level.ordinal()] + " " + result;
 
-            if(!headless && (ui == null || ui.scriptfrag == null)){
-                logBuffer.add(result);
-            }else if(!headless){
-                if(!OS.isWindows){
-                    for(String code : ColorCodes.values){
-                        result = result.replace(code, "");
+                if(!headless && (ui == null || ui.scriptfrag == null)){
+                    logBuffer.add(result);
+                }else if(!headless){
+                    if(!OS.isWindows){
+                        for(String code : ColorCodes.values){
+                            result = result.replace(code, "");
+                        }
                     }
-                }
 
-                ui.scriptfrag.addMessage(Log.removeColors(result));
+                    ui.scriptfrag.addMessage(Log.removeColors(result));
+                }
             }
         };
 

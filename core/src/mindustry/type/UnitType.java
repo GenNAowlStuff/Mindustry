@@ -134,7 +134,7 @@ public class UnitType extends UnlockableContent{
     /** vertical offset of wave trail in naval units  */
     waveTrailY = -3f,
     /** width of all trails (including naval ones) */
-    tailScl = 1f;
+    trailScl = 1f;
 
     /** if true, this unit counts as an enemy in the wave counter (usually false for support-only units) */
     public boolean isEnemy = true,
@@ -362,7 +362,7 @@ public class UnitType extends UnlockableContent{
 
     //TANK UNITS
 
-    /** list of treads as rectangles in IMAGE COORDINATES. these should match the coordinates you see in an image editor*/
+    /** list of treads as rectangles in IMAGE COORDINATES, relative to the center. these are mirrored. */
     public Rect[] treadRects = {};
     /** number of frames of movement in a tread */
     public int treadFrames = 18;
@@ -611,6 +611,16 @@ public class UnitType extends UnlockableContent{
         }
     }
 
+    //never actually called; it turns out certain mods have custom weapons that do not need bullets.
+    protected void validateWeapons(){
+        for(int i = 0; i < weapons.size; i++){
+            var wep = weapons.get(i);
+            if(wep.bullet == Bullets.placeholder || wep.bullet == null){
+                throw new RuntimeException("Unit: " + name + ": weapon #" + i + " ('" + wep.name + "') does not have a bullet defined. Make sure you have a bullet: (JSON) or `bullet = ` field in your unit definition.");
+            }
+        }
+    }
+
     @CallSuper
     @Override
     public void init(){
@@ -628,13 +638,6 @@ public class UnitType extends UnlockableContent{
             immunities.add(StatusEffects.wet);
             if(shadowElevation < 0f){
                 shadowElevation = 0.11f;
-            }
-        }
-
-        for(int i = 0; i < weapons.size; i++){
-            var wep = weapons.get(i);
-            if(wep.bullet == Bullets.placeholder || wep.bullet == null){
-                throw new RuntimeException("Unit: " + name + ": weapon #" + i + " ('" + wep.name + "') does not have a bullet defined. Make sure you have a bullet: (JSON) or `bullet = ` field in your unit definition.");
             }
         }
 
@@ -857,7 +860,7 @@ public class UnitType extends UnlockableContent{
                 String regionName = atlas.name;
                 Pixmap outlined = Pixmaps.outline(Core.atlas.getPixmap(region), outlineColor, outlineRadius);
 
-                if(Core.settings.getBool("linear", true)) Pixmaps.bleed(outlined);
+                Drawf.checkBleed(outlined);
 
                 packer.add(PageType.main, regionName + "-outline", outlined);
             }
@@ -1215,7 +1218,7 @@ public class UnitType extends UnlockableContent{
             unit.trail = new Trail(trailLength);
         }
         Trail trail = unit.trail;
-        trail.draw(trailColor == null ? unit.team.color : trailColor, (engineSize + Mathf.absin(Time.time, 2f, engineSize / 4f) * (useEngineElevation ? unit.elevation : 1f)) * tailScl);
+        trail.draw(trailColor == null ? unit.team.color : trailColor, (engineSize + Mathf.absin(Time.time, 2f, engineSize / 4f) * (useEngineElevation ? unit.elevation : 1f)) * trailScl);
     }
 
     public void drawEngines(Unit unit){
@@ -1303,8 +1306,8 @@ public class UnitType extends UnlockableContent{
             for(int i = 0; i < treadRects.length; i ++){
                 var region = treadRegions[i][frame];
                 var treadRect = treadRects[i];
-                float xOffset = treadRegion.width/2f - (treadRect.x + treadRect.width/2f);
-                float yOffset = treadRegion.height/2f - (treadRect.y + treadRect.height/2f);
+                float xOffset = -(treadRect.x + treadRect.width/2f);
+                float yOffset = -(treadRect.y + treadRect.height/2f);
 
                 for(int side : Mathf.signs){
                     Tmp.v1.set(xOffset * side, yOffset).rotate(unit.rotation - 90);
@@ -1462,7 +1465,7 @@ public class UnitType extends UnlockableContent{
         if(healFlash){
             Tmp.c1.set(Color.white).lerp(healColor, Mathf.clamp(unit.healTime - unit.hitTime));
         }
-        Draw.mixcol(Tmp.c1, Math.max(unit.hitTime, Mathf.clamp(unit.healTime)));
+        Draw.mixcol(Tmp.c1, Math.max(unit.hitTime, !healFlash ? 0f : Mathf.clamp(unit.healTime)));
 
         if(unit.drownTime > 0 && unit.lastDrownFloor != null){
             Draw.mixcol(Tmp.c1.set(unit.lastDrownFloor.mapColor).mul(0.83f), unit.drownTime * 0.9f);
@@ -1495,6 +1498,17 @@ public class UnitType extends UnlockableContent{
 
             Tmp.v1.set(x, y).rotate(rot);
             float ex = Tmp.v1.x, ey = Tmp.v1.y;
+
+            //engine outlines (cursed?)
+            /*float z = Draw.z();
+            Draw.z(z - 0.0001f);
+            Draw.color(type.outlineColor);
+            Fill.circle(
+            unit.x + ex,
+            unit.y + ey,
+            (type.outlineRadius * Draw.scl + radius + Mathf.absin(Time.time, 2f, radius / 4f)) * scale
+            );
+            Draw.z(z);*/
 
             Draw.color(color);
             Fill.circle(
