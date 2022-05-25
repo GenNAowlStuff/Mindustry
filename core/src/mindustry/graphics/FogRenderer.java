@@ -44,7 +44,7 @@ public final class FogRenderer{
 
     public void drawFog(){
         //there is no fog.
-        if(fogControl.getDiscovered(player.team()) == null) return;
+        if(fogControl.getDiscovered(player.team()) == null || !mapLighting) return;
 
         //resize if world size changes
         boolean clearStatic = staticFog.resizeCheck(world.width(), world.height());
