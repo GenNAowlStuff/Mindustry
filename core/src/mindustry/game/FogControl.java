@@ -114,6 +114,7 @@ public final class FogControl implements CustomChunk{
     }
 
     public boolean isVisibleTile(Team team, int x, int y){
+        if(!mapLighting) return true;
         if(!state.rules.fog || team.isAI()) return true;
 
         var data = data(team);

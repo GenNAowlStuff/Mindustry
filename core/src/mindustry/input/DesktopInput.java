@@ -55,8 +55,9 @@ public class DesktopInput extends InputHandler{
     public long selectMillis = 0;
     /** Previously selected tile. */
     public Tile prevSelected;
-    /** Last autotargetted unit. */
+
     public Posc target;
+    public Tile ore;
 
     boolean showHint(){
         return ui.hudfrag.shown && Core.settings.getBool("hints") && selectPlans.isEmpty() &&
@@ -790,7 +791,13 @@ public class DesktopInput extends InputHandler{
         movement.set(0, 0);
         if(unit.canMine() && minerAI){
             Item wanted = unit.team.items().get(Items.copper) < unit.team.items().get(Items.lead) ? Items.copper : Items.lead;
-            Tile ore = indexer.findClosestOre(unit, wanted);
+            ore = indexer.findClosestOre(unit, wanted);
+            if(ore == null){
+                wanted = Items.beryllium;
+                world.tiles.eachTile(tile -> { //What the hell, this isn't efficient at all
+                    if(tile.overlay() == Blocks.wallOreBeryllium && (ore == null || unit.dst2(ore) > unit.dst2(tile))) ore = tile;
+                });
+            }
             if((unit.stack.item != wanted && unit.stack.amount > 0) || unit.stack.amount >= unit.itemCapacity()){
                 CoreBuild core = unit.closestCore();
                 movement.set(core.x, core.y).sub(unit);
@@ -799,7 +806,7 @@ public class DesktopInput extends InputHandler{
                         Call.transferInventory(player, core);
                     }
                 }
-            }else{
+            }else if(ore != null){
                 movement.set(ore.x * tilesize, ore.y * tilesize).sub(unit);
                 if(movement.len() < unit.type.mineRange){
                     movement.set(0, 0);

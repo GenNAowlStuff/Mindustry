@@ -24,7 +24,7 @@ public class UtilitiesFragment{
     public TeamChooseDialog chooseDialog;
     public float killPresst, dupePresst;
     public float current = 1;
-    public float[] speeds = new float[]{0.25f, 0.5f, 1f, 2f, 4f}, speeds2 = new float[]{0f, 0.1f, -1, 8f, 16f};
+    public float[] speeds = new float[]{0.25f, 0.5f, 1f, 2f, 4f}, speeds2 = new float[]{0.05f, 0.1f, -1, 8f, 16f};
 
     public void build(Group parent){
         parent.fill(cont -> {
