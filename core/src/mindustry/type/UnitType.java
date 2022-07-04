@@ -74,6 +74,8 @@ public class UnitType extends UnlockableContent{
     riseSpeed = 0.08f,
     /** how fast this unit falls when not boosting */
     fallSpeed = 0.018f,
+    /** how many ticks it takes this missile to accelerate to full speed */
+    missileAccelTime = 0f,
     /** raw health amount */
     health = 200f,
     /** incoming damage is reduced by this amount */
@@ -471,6 +473,8 @@ public class UnitType extends UnlockableContent{
 
     }
 
+    public void killed(Unit unit){}
+
     public void landed(Unit unit){}
 
     public void display(Unit unit, Table table){
@@ -511,13 +515,24 @@ public class UnitType extends UnlockableContent{
             }
         }).growX();
 
-        if(unit.controller() instanceof LogicAI){
+        if(unit.controller() instanceof LogicAI ai){
             table.row();
             table.add(Blocks.microProcessor.emoji() + " " + Core.bundle.get("units.processorcontrol")).growX().wrap().left();
+            if(ai.controller != null && (Core.settings.getBool("mouseposition") || Core.settings.getBool("position"))){
+                table.row();
+                table.add("[lightgray](" + ai.controller.tileX() + ", " + ai.controller.tileY() + ")").growX().wrap().left();
+            }
             table.row();
             table.label(() -> Iconc.settings + " " + (long)unit.flag + "").color(Color.lightGray).growX().wrap().left();
+            if(net.active() && ai.controller != null && ai.controller.lastAccessed != null){
+                table.row();
+                table.add(Core.bundle.format("lastaccessed", ai.controller.lastAccessed)).growX().wrap().left();
+            }
+        }else if(net.active() && unit.lastCommanded != null){
+            table.row();
+            table.add(Core.bundle.format("lastcommanded", unit.lastCommanded)).growX().wrap().left();
         }
-        
+
         table.row();
     }
 
@@ -567,7 +582,7 @@ public class UnitType extends UnlockableContent{
             var unique = new ObjectSet<String>();
 
             for(Ability a : abilities){
-                if(unique.add(a.localized())){
+                if(a.display && unique.add(a.localized())){
                     stats.add(Stat.abilities, a.localized());
                 }
             }
@@ -610,9 +625,7 @@ public class UnitType extends UnlockableContent{
             if(naval){
                 imm.remove(StatusEffects.wet);
             }
-            for(var i : imm){
-                stats.add(Stat.immunities, i.emoji() + " " + i.localizedName);
-            }
+            stats.add(Stat.immunities, StatValues.statusEffects(imm));
         }
     }
 
@@ -872,18 +885,55 @@ public class UnitType extends UnlockableContent{
         }
 
         if(outlines){
+            Seq<TextureRegion> outlineSeq = Seq.with(region, jointRegion, footRegion, baseJointRegion, legRegion, treadRegion);
+            if(Core.atlas.has(name + "-leg-base")){
+                outlineSeq.add(legBaseRegion);
+            }
 
             //note that mods with these regions already outlined will have *two* outlines made, which is... undesirable
-            for(var outlineTarget : new TextureRegion[]{region, jointRegion, footRegion, legBaseRegion, baseJointRegion, legRegion, treadRegion}){
+            for(var outlineTarget : outlineSeq){
                 if(!outlineTarget.found()) continue;
 
                 makeOutline(PageType.main, packer, outlineTarget, alwaysCreateOutline && region == outlineTarget, outlineColor, outlineRadius);
             }
 
+            if(sample instanceof Crawlc){
+                for(int i = 0; i < segments; i++){
+                    makeOutline(packer, segmentRegions[i], name + "-segment-outline" + i, outlineColor, outlineRadius);
+                }
+            }
+
             for(Weapon weapon : weapons){
-                if(!weapon.name.isEmpty()){
-                    //TODO makeNew isn't really necessary here is it
-                    makeOutline(PageType.main, packer, weapon.region, true, outlineColor, outlineRadius);
+                if(!weapon.name.isEmpty() && (minfo.mod == null || weapon.name.startsWith(minfo.mod.name)) && !(!weapon.top && packer.isOutlined(weapon.name))){
+                    makeOutline(PageType.main, packer, weapon.region, !weapon.top, outlineColor, outlineRadius);
+                }
+            }
+        }
+
+        //TODO test
+        if(sample instanceof Tankc){
+            PixmapRegion pix = Core.atlas.getPixmap(treadRegion);
+
+            for(int r = 0; r < treadRects.length; r++){
+                Rect treadRect = treadRects[r];
+                //slice is always 1 pixel wide
+                Pixmap slice = pix.crop((int)(treadRect.x + pix.width/2f), (int)(treadRect.y + pix.height/2f), 1, (int)treadRect.height);
+                int frames = treadFrames;
+                for(int i = 0; i < frames; i++){
+                    int pullOffset = treadPullOffset;
+                    Pixmap frame = new Pixmap(slice.width, slice.height);
+                    for(int y = 0; y < slice.height; y++){
+                        int idx = y + i;
+                        if(idx >= slice.height){
+                            idx -= slice.height;
+                            idx += pullOffset;
+                            idx = Mathf.mod(idx, slice.height);
+                        }
+
+                        frame.setRaw(0, y, slice.getRaw(0, idx));
+                    }
+
+                    packer.add(PageType.main, name + "-treads" + r + "-" + i, frame);
                 }
             }
         }
@@ -1107,9 +1157,9 @@ public class UnitType extends UnlockableContent{
 
                 WeaponMount first = unit.mounts.length > part.weaponIndex ? unit.mounts[part.weaponIndex] : null;
                 if(first != null){
-                    DrawPart.params.set(first.warmup, first.reload / weapons.first().reload, first.smoothReload, first.heat, first.recoil, unit.x, unit.y, unit.rotation);
+                    DrawPart.params.set(first.warmup, first.reload / weapons.first().reload, first.smoothReload, first.heat, first.recoil, first.charge, unit.x, unit.y, unit.rotation);
                 }else{
-                    DrawPart.params.set(0f, 0f, 0f, 0f, 0f, unit.x, unit.y, unit.rotation);
+                    DrawPart.params.set(0f, 0f, 0f, 0f, 0f, 0f, unit.x, unit.y, unit.rotation);
                 }
 
                 if(unit instanceof Scaled s){
